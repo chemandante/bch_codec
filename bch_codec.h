@@ -28,6 +28,43 @@
 
 #include <stdint.h>
 
+
+/**
+ * \def BCH_USE_OWN_MALLOC
+ *
+ * Use own malloc/free functions. In this case bch_malloc() and bch_free() must be provided.
+ *
+ * Used in:
+ *      bch_codec.c
+ *
+ * Uncomment to enable.
+ */
+//#define BCH_USE_OWN_MALLOC
+
+/**
+ * \def BCH_USE_OWN_PRINTF
+ *
+ * Use own printf function. In this case bch_printf() must be provided.
+ *
+ * Used in:
+  *      bch_test.cpp
+ *
+ * Uncomment to enable.
+ */
+//#define BCH_USE_OWN_PRINTF
+
+/**
+ * \def BCH_USE_TMS320C6400_INTRINSICS
+ *
+ * Use some helpful instructions of TMS320C6400 DSP's, like endianess swap, bit counting, etc.
+ *
+ * Used in:
+  *      bch_codec.c
+ *
+ * Uncomment to enable.
+ */
+//#define BCH_USE_TMS320C6400_INTRINSICS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,6 +128,7 @@ void correct_bch(struct bch_control *bch, uint8_t *data,unsigned int len, unsign
 
 void correctbits_bch(struct bch_control *bch, uint8_t *databits, unsigned int *errloc, int nerr);
 
+int _bch_test(int m,int t,unsigned int prim_poly,int ntrials);
 
 #ifdef __cplusplus
 }

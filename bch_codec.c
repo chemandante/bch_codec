@@ -67,29 +67,51 @@
 #include "bch_codec.h"
 #include <errno.h>
 
-static
-inline 
-uint32_t CPU_TO_BE32(uint32_t p) 
-{
-    const uint8_t * bytes = (const uint8_t *)&p;
-    uint32_t out = 
-        ((uint32_t)bytes[0] << 24) |
-        (bytes[1] << 16) |
-        (bytes[2] << 8) |
-        (bytes[3] )  ;
-    return out;
-}
+#ifdef BCH_USE_OWN_MALLOC
+	extern void* bch_malloc(size_t _size);
+	extern void bch_free(void *_ptr);
 
-static inline int FLS(uint32_t x)
-{
-    int r=0;
-    if (x>=(1<<16)) { r+=16;x>>=16; }
-    if (x>=(1<< 8)) { r+= 8;x>>= 8; }
-    if (x>=(1<< 4)) { r+= 4;x>>= 4; }
-    if (x>=(1<< 2)) { r+= 2;x>>= 2; }
-    if (x>=(1<< 1)) { r+= 1;x>>= 1; }
-    return r+x;
-}
+	#define malloc		bch_malloc
+	#define free		bch_free
+#endif
+
+#ifdef BCH_USE_TMS320C6400_INTRINSICS
+	#include <c6x.h>
+
+	static inline uint32_t CPU_TO_BE32(uint32_t p)
+	{
+	    return _swap4(_swap2(p));
+	}
+
+	static inline int FLS(uint32_t x)
+	{
+		return 32 - _lmbd(1, x);
+	}
+
+#else
+	static inline uint32_t CPU_TO_BE32(uint32_t p)
+	{
+		const uint8_t * bytes = (const uint8_t *)&p;
+		uint32_t out =
+			((uint32_t)bytes[0] << 24) |
+			(bytes[1] << 16) |
+			(bytes[2] << 8) |
+			(bytes[3] )  ;
+		return out;
+	}
+
+	static inline int FLS(uint32_t x)
+	{
+		int r=0;
+		if (x>=(1<<16)) { r+=16;x>>=16; }
+		if (x>=(1<< 8)) { r+= 8;x>>= 8; }
+		if (x>=(1<< 4)) { r+= 4;x>>= 4; }
+		if (x>=(1<< 2)) { r+= 2;x>>= 2; }
+		if (x>=(1<< 1)) { r+= 1;x>>= 1; }
+		return r+x;
+	}
+#endif
+
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 
@@ -1191,8 +1213,8 @@ static uint32_t *compute_generator_polynomial(struct bch_control *bch)
 
         if (err) {
                 free(genpoly);
-                genpoly = NULL;
-                goto finish;
+            genpoly = NULL;
+            goto finish;
         }
 
         /* enumerate all roots of g(X) */

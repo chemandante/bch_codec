@@ -3,4 +3,4 @@
 .~lock.*
 *.o
 bch_test
-
+*.bak
